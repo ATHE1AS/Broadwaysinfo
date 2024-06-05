@@ -1,0 +1,182 @@
+
+CCNA
+BROADWAYSIFOSYS
+GIAN MUSTAFA
+
+------------------------------------------------MODES IN ROUTER---------------------------------------------------------------
+
+MODE 				NAME						USAGE
+Router> 			userexec mode					login, view basic settings
+Router#				privilege mode					view/save/delete settings, backup and restore
+Router(config)#			Global configuration mode			set basic configuration , go to other modes
+Router(config-if)#		interface mode					set ip , turn on/off ports
+Router(config-line)#		line mode 					configure console and remote access
+Router(config-router)#		routing mode					set dynamic routing protocols
+
+
+--------------------------------------------CONFIGURATION OF ROUTER--------------------------------------------------------
+
+
+ROUTER 
+
+	Router>enable    
+	Router#configure terminal						//Change to Global-Configuration Mode
+	Router(config)#hostname R1 						/Names router to R1
+	R1(config)#interface fa0/0						//selecting the interface Fa0/0 to set interface setting: Fa0/0 where the
+	                                                                          Switch is connected.
+	R1(config-if)#ip address 192.168.10.1 255.255.255.0			//Setting routers IP & Subnet-mask
+	R1(config-if)#no shutdown						//Keeps the interface(Fa0/0) in Up-state
+	R1(config-if)#exit							//exit Global-Configuration Mode
+	R1(config)#exit
+	R1#
+	R1#copy running-config startup-config 					//Saves current setting 
+
+
+
+//PS: ctrl + Z --> takes directly to the privilege mode
+----------------------------------------------CREATING USER AND PASSWORD------------------------------------------------------
+
+
+		-setting user&password to login into router
+		-setting password for enable mode
+	
+	
+	R1(config)#username sudan password 123					//Creates user: sudan with password: 123
+										//password: commands creates a normal-encrypt password
+	
+	R1(config)#username user1 secret 123					//secret: creates a SHA-encrypt password(Primary-Password)
+										//is more preferred than "password" command.
+	
+	R1(config)#enable secret 123						//creates password for enable mode (Secondary-Password)
+	
+	R1(config)#line console 0						//Entering line mode	
+	R1(config-line)#login local						//Asks for username & password while enter router setting
+
+//Creating Banner
+	
+	//Inside line-console
+	R1(config-line)#banner login $Pusparaj jhukega nahi$			//Display banner at login page.
+										//enclose the message between similar starting and ending symbol (ie. $)
+										//could be any symbol but should be similar in both sides.
+	
+//Setting time-out 
+         -time after which router goes to sleep-mode
+        
+        //Inside line-console
+	R1(config-line)#exec-timeout 5 40					//router CLI will logout after given time: 5 min 4 sec
+	
+	R1#copy run start							//saves current setting
+	
+	
+//PS: "translation error" message is stoped using CTRL+SHIFT+6	
+----------------------------------------------------------SETTING DHCP------------------------------------------------------------
+		
+		-Auto assigns IP-address to device connected on network according to given DHCP-pool
+
+//Excluding ip-address(static) from a DHCP
+	
+	R1(config)#ip dhcp excluded-address 192.168.10.1			//192.168.10.1 willn't assigned dynamically
+	R1(config)#ip dhcp excluded-address 192.168.10.11 192.168.10.60		//From 192.168.10.11 to 192.168.10.60 willn't assigned dynamically
+	
+//Creating DHCP-Pool
+	
+	R1(config)#ip dhcp pool DHCP1
+	R1(config)#network 192.168.30.0 255.255.255.0
+	R1(config)#default-router 192.168.10.1
+	R1(config)#dns-server 8.8..8.8
+	R1#copy run start							//saves current setting
+
+//CHECK DHCP SETTING
+
+	R1#show ip dhcp pool							//Shows DHCP pool
+	R1#show ip dhcp binding							//Shows automatically assigned ip-address
+	R1#show ip dhcp conflict						//Shows conflicted ip-addresses
+
+
+//DORA PROCESS: processed used by DHCP to assign ip-addresses.
+
+	DISCOVER 		-is sent by client for ip-address -is broadcast
+	OFFER   		-is sent by DHCP -is unicast to requesting device -offers a ip-address but does not set.
+	REQUEST  		-is sent by client -is broadcast -sets ip-address, checks if any device have similar ip-address it will be discarded.
+	ACKNOWLEDGEMENT 	-is sent by server -is unicast -confirms the ip-address for device, if there is no ip conflict.
+
+
+
+//PS:APIPA (if DHCP is not running. APIPA automatically assigns ip to device with class B address i.e 169.254.x.x)
+-------------------------------------------------------REMOTE ACCESS----------------------------------------------------------------
+		
+		-uses vty (virtual teletype) to access router remotely 
+		-we can give access to total 16 users, indicated by (0-15)
+
+
+//Telnet (tele-network)
+	
+	R1(config)#line vty 0 7							//(0-7) indicates total 8 users	
+	R1(config-line)#transport input telnet					//enables telnet function for the router
+	R1(config-line)#login local
+	R1(config line)#exit
+	
+	R1(config)#username admin secret 123					//setting usrename&password to login remotely
+	R1(config)#end
+	R1#copy run start							//saves current setting
+
+
+	//connecting router through telnet using PC on network
+	-open cmd in PC
+	>telnet <router-ip>
+	
+	
+//SSH (Secure Shell)
+	
+	R1(config)#ip domain name FirstSSH					//give any <domain-name> (FirstSSH)
+	R1(config)#crypto key generate rsa 
+	
+	     -asks for number of bits in module
+	     -give bits greater than 768 for ssh v2
+	     
+	R1(config)#ip ssh version 2
+	R1(config)#line vty 0 7
+	R1(config)#transport input ssh 						//enable SSH only 
+										//#transport input all: enables ssh and telnet both.
+	R1(config)#login local
+	R1(config)#end
+	R1#copy run start							//saves current setting
+	
+	
+	//connecting router through SSH using PC on network
+	-open cmd in PC
+	>ssh -l <user-name> <router-ip>
+	OR,
+	>ssh <user-name>@<router-ip>
+
+
+---------------------------------------------------DELETE COMMAND---------------------------------------------------------------------------
+
+		-deleting the set value 
+		
+	R1#erase startup-config							//delete all current setting of router
+
+	#no <command-to-delete>							//no is used to unset/delete the function of a command used before
+	
+	
+	R1(config)#line console 0
+	R1(config-line)#no password						//removes password-setting from current router  user
+	R1(config-line)#no login						//removes login local setting from current router user
+	R1(config-line)#exit	
+	
+	R1(config)#no enable password						//removes enable password setting
+	R1(config)#end
+	R1#
+	R1#copy running-config startup-config
+	
+---------------------------------------------------CHECK CURRENT SETTINGS-------------------------------------------------------------------
+
+
+	
+	R1#show ip int brief  							 //To display ip of router
+	R1#show protocols      							 //To display ip with sub-net mask
+	R1#show running-config 							 //To display all setting
+	R1#show startup-config							 //To display saved setting
+	
+	
+--------------------------------------------------------------------------------------------------------------------------------------------
