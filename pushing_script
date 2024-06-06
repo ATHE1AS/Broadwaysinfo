@@ -2,5 +2,13 @@
 
 git status
 git add .
-git commit -m "scripteded"
-git push origin master
+echo
+echo
+echo "commit?"
+read commit
+git commit -m "$commit"
+echo
+echo
+echo  "branch?"
+read branch
+git push origin $branch
